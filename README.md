@@ -23,7 +23,8 @@
 - 13 - Server to Client (OP_RESTART_CONFIRM): Opcode 13; confirmation flag (1 byte: 1 to continue, 0 to end session).
 - 14 - Server to Client (OP_WAITING_FOR_PLAYER): Opcode 14; status payload (1 byte, e.g., 0 for waiting).
 
-![{15D8811D-4E0E-4126-9995-8D96178DC20B}](https://github.com/user-attachments/assets/dd982940-bf43-44b1-9767-7ff657565a93)
+![{57F89396-0B6C-44B7-98E4-99625DDAF69A}](https://github.com/user-attachments/assets/810ee6f9-919c-4906-8264-ff6a5fafa2d4)
+
 
 
 ## Commands
