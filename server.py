@@ -14,7 +14,7 @@ logging.basicConfig(
 HOST = '0.0.0.0'
 PORT = 12345
 
-# Opcodes (Certifique-se de que o cliente use os mesmos valores)
+# Opcodes
 OP_SETWORD         = 1
 OP_GUESS           = 2
 OP_UPDATE          = 3
@@ -32,7 +32,7 @@ OP_WAITING_FOR_PLAYER = 14
 MAX_ERRORS = 6
 TIMEOUT    = 60
 
-
+# Envia dados para o socket lidando com possíveis erros de conexão
 def sendall_safe(sock, data: bytes):
     try:
         if sock.fileno() == -1: # Verifica se o socket ainda está aberto
@@ -45,6 +45,7 @@ def sendall_safe(sock, data: bytes):
         logging.warning(f"Falha ao enviar para {sock.getpeername()}: {e}")
         return False
 
+# Recebe exatamente n bytes do socket
 def recv_exact(sock, n: int) -> bytes:
     buf = b''
     while len(buf) < n:
@@ -55,6 +56,7 @@ def recv_exact(sock, n: int) -> bytes:
     logging.debug(f"Recebido {buf!r} de {sock.getpeername()}")
     return buf
 
+# Envia dados do estado do jogo para ambos os jogadores
 def send_game_state(guesser_sock, setter_sock, current_word_display, wrong_guesses_set, remaining_attempts, is_guesser_turn):
     word_display_str = "".join(current_word_display)
     wrong_guesses_str = "".join(sorted(list(wrong_guesses_set)))
@@ -72,10 +74,6 @@ def send_game_state(guesser_sock, setter_sock, current_word_display, wrong_guess
 
 
 def play_round(setter_sock, guesser_sock, players_data):
-    """
-    Gerencia uma única rodada do jogo (um SETTER, um GUESSER).
-    Retorna True se a rodada foi jogada e os jogadores querem reiniciar, False se houve erro ou não querem.
-    """
     try:
         # Atribuição de papéis (enviada novamente em cada rodada para reiniciar estado do cliente)
         sendall_safe(setter_sock, bytes([OP_PLAYER_ROLE, 1])) # 1 para SETTER
@@ -176,10 +174,6 @@ def play_round(setter_sock, guesser_sock, players_data):
         return False
 
 def handle_game_session(client_sockets):
-    """
-    Gerencia a sessão completa de jogo entre dois clientes, incluindo múltiplos reinícios.
-    Retorna uma lista de sockets que desejam continuar e devem ser adicionados ao lobby.
-    """
     p1_sock, p2_sock = client_sockets
     players_data = {
         p1_sock: {"id": 1, "score": 0},
@@ -212,10 +206,6 @@ def handle_game_session(client_sockets):
         logging.info(">> Enviando OP_RESTART a ambos para decisão de nova partida.")
 
         restart_decisions = {}
-
-
-        sockets_to_poll = list(client_sockets)
-
         for sock in client_sockets:
             sendall_safe(sock, bytes([OP_RESTART, 1]))
 
@@ -274,9 +264,6 @@ def handle_game_session(client_sockets):
 
             # Se um ou ambos não quiserem, a sessão atual termina.
             return sockets_to_return
-
-
-    return sockets_to_return
 
 def handle_client_thread(client_sock, client_addr):
     global waiting_clients
@@ -345,15 +332,15 @@ waiting_clients_lock = threading.Lock()
 def main():
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.bind((HOST, PORT))
-    srv.listen(5) # Pode ouvir mais de 2, para o "lobby"
+    srv.listen(10)
     logging.info(f"Servidor em {HOST}:{PORT}, aguardando pares...")
-
 
     while True:
         try:
             conn, addr = srv.accept()
+            # Thread para lidar com o cliente
             client_thread = threading.Thread(target=handle_client_thread, args=(conn, addr))
-            client_thread.daemon = True # Permite que o programa principal saia mesmo com threads ativas
+            client_thread.daemon = True
             client_thread.start()
         except KeyboardInterrupt:
             logging.info("Servidor encerrado pelo usuário.")

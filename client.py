@@ -61,8 +61,9 @@ def main():
         wrong_guesses = set()
         remaining_attempts = 0
         is_setter = False
-
-        while True: # Loop principal do cliente para gerenciar múltiplos jogos/reinícios
+        
+        # Loop principal do cliente para gerenciar múltiplos jogos/reinícios
+        while True: 
             logging.debug("Esperando opcode do servidor...")
             op = recv_exact(s, 1)[0]
             logging.debug(f"Opcode {op} recebido")
